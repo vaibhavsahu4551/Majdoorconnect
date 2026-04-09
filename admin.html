@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <title>MajdoorConnect Admin</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 
 body{
@@ -50,95 +46,64 @@ background:orange;
 }
 
 </style>
-
 </head>
-
 <body>
+<script>
+
+const password = prompt("Enter Admin Password")
+
+if(password !== "@Gulabo4469"){
+alert("Access Denied")
+window.location.href="/"
+}
+
+</script>
 
 <h1>MajdoorConnect Admin Dashboard</h1>
-
+<h3>Worker Status</h3>
 <div class="section">
-
 <h2>Analytics</h2>
-
 <p>Total Workers: <span id="workersCount">0</span></p>
 <p>Approved Workers: <span id="approvedCount">0</span></p>
 <p>Total Bookings: <span id="bookingCount">0</span></p>
 <p>Completed Jobs: <span id="completedCount">0</span></p>
-
-<button onclick="loadAnalytics()">Refresh</button>
-
 </div>
-
-
 <div class="section">
-
 <h2>Worker Management</h2>
-
-<button onclick="loadWorkers()">Load Workers</button>
-
 <div id="workers"></div>
-
 </div>
-
-
 <div class="section">
-
 <h2>Booking Management</h2>
-
-<button onclick="loadBookings()">Load Bookings</button>
-
 <div id="bookings"></div>
-
 </div>
-
-
 <div class="section">
-
-<h2>Customers</h2>
-
-<button onclick="loadCustomers()">Load Customers</button>
-
+  <h2>Customers</h2>
 <div id="customers"></div>
-
 </div>
-
-
 <div class="section">
-
 <h2>Complaints</h2>
-
-<button onclick="loadComplaints()">Load Complaints</button>
-
 <div id="complaints"></div>
-
 </div>
-
-
 <script>
 
 const supabaseUrl = "https://agyckzqfklwyjotyaotr.supabase.co"
 const supabaseKey = "sb_publishable_Goa6r58YrYEzipGH0mjymA_khUvhFDz"
 
-const client = supabase.createClient(supabaseUrl,supabaseKey)
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+
 
 
 async function loadAnalytics(){
 
-const {data:workers} = await client.from("workers").select("*")
+const {data:workers} = await supabase.from("workers").select("*")
+const {data:bookings} = await supabase.from("bookings").select("*")
 
-const {data:bookings} = await client.from("bookings").select("*")
-
-const approved = workers.filter(w=>w.status==="approved")
-
+const approved = workers.filter(w=>w.verification_status==="verified")
 const completed = bookings.filter(b=>b.status==="completed")
 
 document.getElementById("workersCount").innerText = workers.length
-
 document.getElementById("approvedCount").innerText = approved.length
-
 document.getElementById("bookingCount").innerText = bookings.length
-
 document.getElementById("completedCount").innerText = completed.length
 
 }
@@ -147,7 +112,7 @@ document.getElementById("completedCount").innerText = completed.length
 
 async function loadWorkers(){
 
-const {data} = await client.from("workers").select("*")
+const {data} = await supabase.from("workers").select("*")
 
 const container = document.getElementById("workers")
 
@@ -163,11 +128,11 @@ div.innerHTML=`
 
 <b>${worker.name}</b> - ${worker.skill}
 
-<button onclick="approveWorker('${worker.id}')">Approve</button>
+<p>Status: ${worker.verification_status}</p>
 
-<button class="reject" onclick="rejectWorker('${worker.id}')">Reject</button>
+<button onclick="verifyWorker('${worker.id}')">Verify</button>
 
-<button class="suspend" onclick="suspendWorker('${worker.id}')">Suspend</button>
+<button onclick="rejectWorker('${worker.id}')">Reject</button>
 
 `
 
@@ -179,14 +144,14 @@ container.appendChild(div)
 
 
 
-async function approveWorker(id){
+async function verifyWorker(id){
 
-await client
+await supabase
 .from("workers")
-.update({status:"approved"})
+.update({verification_status:"verified"})
 .eq("id",id)
 
-alert("Worker Approved")
+alert("Worker Verified")
 
 loadWorkers()
 
@@ -196,9 +161,9 @@ loadWorkers()
 
 async function rejectWorker(id){
 
-await client
+await supabase
 .from("workers")
-.update({status:"rejected"})
+.update({verification_status:"rejected"})
 .eq("id",id)
 
 alert("Worker Rejected")
@@ -209,24 +174,9 @@ loadWorkers()
 
 
 
-async function suspendWorker(id){
-
-await client
-.from("workers")
-.update({status:"suspended"})
-.eq("id",id)
-
-alert("Worker Suspended")
-
-loadWorkers()
-
-}
-
-
-
 async function loadBookings(){
 
-const {data} = await client.from("bookings").select("*")
+const {data} = await supabase.from("bookings").select("*")
 
 const container = document.getElementById("bookings")
 
@@ -260,7 +210,7 @@ container.appendChild(div)
 
 async function completeJob(id){
 
-await client
+await supabase
 .from("bookings")
 .update({status:"completed"})
 .eq("id",id)
@@ -275,7 +225,7 @@ loadBookings()
 
 async function loadCustomers(){
 
-const {data} = await client.from("customers").select("*")
+const {data} = await supabase.from("customers").select("*")
 
 const container = document.getElementById("customers")
 
@@ -305,7 +255,7 @@ container.appendChild(div)
 
 async function loadComplaints(){
 
-const {data} = await client.from("complaints").select("*")
+const {data} = await supabase.from("complaints").select("*")
 
 const container = document.getElementById("complaints")
 
@@ -331,7 +281,36 @@ container.appendChild(div)
 
 }
 
-</script>
 
+
+const workerPhone = "9876543210"
+
+
+
+async function goOnline(){
+
+await supabase
+.from('workers')
+.update({ is_online: true })
+.eq('phone', workerPhone)
+
+alert("Worker is Online")
+
+}
+
+
+
+async function goOffline(){
+
+await supabase
+.from('workers')
+.update({ is_online: false })
+.eq('phone', workerPhone)
+
+alert("Worker is Offline")
+
+}
+
+</script>
 </body>
 </html>
